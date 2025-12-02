@@ -15,6 +15,9 @@ public class User {
         this.password = password;
         this.role = role;
     }
+    // this is a comment
+//    this is a comment
+//    this is a comment
 
     public int getId() {
         return id;
