@@ -30,6 +30,7 @@ public class UserView {
 
         Button newTicketBtn = new Button("Raise Ticket");
         Button logoutBtn = new Button("Logout");
+<<<<<<< HEAD
         Button decreasePriBtn = new Button("Decrease priority");
 
         logoutBtn.setOnAction(e -> app.logout());
@@ -46,6 +47,13 @@ public class UserView {
 
 
         HBox buttons = new HBox(10, newTicketBtn,decreasePriBtn, logoutBtn);
+=======
+
+
+        logoutBtn.setOnAction(e -> app.logout());
+
+        HBox buttons = new HBox(10, newTicketBtn, logoutBtn);
+>>>>>>> 3b08bfcf34d6e912644f8bed49df162db43cdb04
         BorderPane.setMargin(buttons, new Insets(10, 10, 0, 0));
 
         root.setTop(header);
@@ -75,6 +83,7 @@ public class UserView {
         dateCol.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().getCreatedDate().toString()));
 
+<<<<<<< HEAD
         TableColumn<Ticket, String> RequestCol = new TableColumn<>("Request");
         RequestCol.setCellValueFactory(new PropertyValueFactory<>("RequestType"));
 
@@ -153,4 +162,14 @@ public class UserView {
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.showAndWait();
     }
+=======
+        TableColumn<Ticket, String> activityCol = new TableColumn<>("Activity");
+        activityCol.setCellValueFactory(new PropertyValueFactory<>("activityType"));
+
+        table.getColumns().addAll(idCol, titleCol, statusCol, prioCol, resCol, dateCol, activityCol);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+    }
+
+
+>>>>>>> 3b08bfcf34d6e912644f8bed49df162db43cdb04
 }

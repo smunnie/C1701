@@ -1,5 +1,8 @@
 import javafx.beans.property.SimpleStringProperty;
+import javafx. collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx. collections.transformation.FilteredList;
+import javafx. collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -10,9 +13,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+
+import java.time.LocalDate;
+
 public class AdminView {
 
     private final ITTicketingSimpleApp app;
+    private FilteredList<Ticket> filteredTickets;
 
     public AdminView(ITTicketingSimpleApp app) {
         this.app = app;
@@ -28,14 +35,23 @@ public class AdminView {
         TableView<Ticket> table = new TableView<>();
         setupAdminTable(table);
 
-        table.setItems(app.getAllTickets());
+        // Get Tickets and Setup filtering
+        ObservableList<Ticket> masterList = app.getTicketManager().getAllTickets();
+        FilteredList<Ticket> filteredTickets = new FilteredList<>(masterList, t -> true);
 
+        SortedList<Ticket> sorted = new SortedList<>(filteredTickets);
+
+        sorted.comparatorProperty().bind(table.comparatorProperty());
+        table.setItems(sorted);
+
+        //Buttons
         Button resolveBtn = new Button("Resolve");
         Button deleteBtn = new Button("Delete");
         Button changePriorityBtn = new Button("Change Priority");
         Button newTicketBtn = new Button("Raise Ticket");
         Button logoutBtn = new Button("Logout");
 
+//        HBox buttons = new HBox(10, resolveBtn, deleteBtn, changePriorityBtn, logoutBtn);
         HBox buttons = new HBox(10, resolveBtn, deleteBtn, changePriorityBtn,newTicketBtn);
         buttons.setAlignment(Pos.CENTER_LEFT);
         buttons.setPadding(new Insets(10, 0, 10, 0));
@@ -65,10 +81,24 @@ public class AdminView {
         });
 
 
+        //Filter controls
         Label filterLabel = new Label("Filter:");
         ComboBox<String> statusBox = new ComboBox<>();
-        statusBox.getItems().addAll("Any", "Open", "Resolved");
+        statusBox.getItems().addAll("Any", "Open", "Resolved", "cancelled");
         statusBox.setValue("Any");
+
+        // status listener
+        statusBox.valueProperty().addListener(
+                (observable, oldStatus, newStatus) -> {
+                    System.out.println(filteredTickets + newStatus.toLowerCase());
+                    if (newStatus.equals("Any")){
+                        filteredTickets.setPredicate(ticket -> true);
+                    } else {
+                        filteredTickets.setPredicate(Ticket ->
+                                Ticket.getStatus().name().equalsIgnoreCase(newStatus));
+                    }
+                });
+
 
         DatePicker fromDatePicker = new DatePicker();
         fromDatePicker.setPromptText("From date");
@@ -80,8 +110,9 @@ public class AdminView {
         activityField.setPromptText("Activity type");
 
         Button applyFilterBtn = new Button("Apply");
+        //Button clearFilterBtn = new Button("clear")
 
-
+        //setup filter button actions
         HBox filterBar = new HBox(10, filterLabel, statusBox, fromDatePicker,
                 toDatePicker, activityField, applyFilterBtn);
         filterBar.setAlignment(Pos.CENTER_LEFT);
