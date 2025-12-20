@@ -1,13 +1,12 @@
 package model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Ticket {
     public enum Status{
         open,
         resolved,
-        cancelled;
+        cancelled
     }
     public enum JobRequest{
       network_issue(2),
@@ -15,27 +14,17 @@ public class Ticket {
       new_computer_configuration(4),
       security_issues(1);
 
-      private final int priority;
+      private final int defaultPriority;
 
-      JobRequest(int priority){
+      JobRequest(int defaultPriority){
 
-        this.priority = priority;
+        this.defaultPriority = defaultPriority;
       }
 
-      public int getPriority() {
+      public int getDefaultPriority() {
 
-        return priority;
+        return defaultPriority;
       }
-
-      public static JobRequest fromPriority(int p) {
-        for (JobRequest req : values()) {
-            if (req.priority == p) return req;
-        }
-        return null;
-      }
-
-
-
     }
 
 
@@ -49,6 +38,7 @@ public class Ticket {
     public LocalDateTime createdDate;
  //changed activityType to requestType
     public JobRequest requestType;
+    public int priority;
 
 //    constructor
     public Ticket( String title, String description, User createdBy, JobRequest requestType) {
@@ -60,6 +50,7 @@ public class Ticket {
         this.status = Status.open;
         this.createdDate = LocalDateTime.now();
         this.requestType = requestType;
+        this.priority = requestType.getDefaultPriority();
         this.resolution_note = " ";
     }
 
@@ -90,7 +81,7 @@ public class Ticket {
     }
 
     public int getPriority(){
-        return requestType.getPriority();
+        return priority;
     }
 
 //  setter
@@ -107,11 +98,8 @@ public class Ticket {
         this.createdDate = createdDateTime;
     }
 
-    public void setPriority(int newPriority) {
-        JobRequest matching = JobRequest.fromPriority(newPriority);
-        if (matching != null) {
-            this.requestType = matching;
+    public void setPriority(int priority) {
+        this.priority = priority;
         }
-    }
 
 }

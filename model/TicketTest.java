@@ -19,7 +19,7 @@ public class TicketTest {
         System.out.println(tickets.getFirst().id);
         System.out.println(tickets.getFirst().title);
         System.out.println(tickets.getFirst().getRequestType());
-        System.out.println(tickets.getFirst().getRequestType().getPriority());
+        System.out.println(tickets.getFirst().getPriority());
 
     }
     public static void main(String[] args){

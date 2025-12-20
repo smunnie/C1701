@@ -12,18 +12,28 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import ui.TicketDialogs;
+import ui.DecreaseTicketPriorityDialog;
+import ui.DeleteTicketDialog;
+import ui.NewTicketDialog;
 import javafx.scene.layout.Priority;
+
+import java.time.format.DateTimeFormatter;
 
 
 public class UserView {
 
     private final ITTicketingSimpleApp app;
-    private final TicketDialogs ticketDialogs;
+//    private final TicketDialogs ticketDialogs;
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private final NewTicketDialog newTicketDialog;
+    private final DeleteTicketDialog deleteDialogs;
+    private final DecreaseTicketPriorityDialog decreasePriDialog;
 
     public UserView(ITTicketingSimpleApp app) {
         this.app = app;
-        this.ticketDialogs = new TicketDialogs(app);
+        this.newTicketDialog = new NewTicketDialog(app);
+        this.decreasePriDialog = new DecreaseTicketPriorityDialog();
+        this.deleteDialogs = new DeleteTicketDialog(app);
     }
 
     public Scene createScene() {
@@ -61,18 +71,18 @@ public class UserView {
         logoutBtn.setOnAction(e -> app.logout());
 
         newTicketBtn.setOnAction(e -> {
-            ticketDialogs.newTicketDialog();
+            newTicketDialog.show();
         });
 
         decreasePriBtn.setOnAction(e -> {
             Ticket t = table.getSelectionModel().getSelectedItem();
-            ticketDialogs.decreasePriDialog(t, table);
+            decreasePriDialog.show(t, table);
         });
 
         deleteBtn.setOnAction(e -> {
             Ticket t = table.getSelectionModel().getSelectedItem();
             if (t == null) return;
-            ticketDialogs.deleteWarningDialog(t,table);
+            deleteDialogs.show(t,table);
         });
 
 
@@ -110,10 +120,16 @@ public class UserView {
 
         TableColumn<Ticket, String> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(cell ->
-                new SimpleStringProperty(cell.getValue().getCreatedDate().toString()));
+                new SimpleStringProperty(String.format(cell.getValue().getCreatedDate().format(dateFormatter))));
 
         TableColumn<Ticket, String> RequestCol = new TableColumn<>("Request");
-        RequestCol.setCellValueFactory(new PropertyValueFactory<>("RequestType"));
+        RequestCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(
+                        app.formatEnumName(cellData.getValue().getRequestType().name())
+                )
+        );
+
+//        RequestCol.setCellValueFactory(new PropertyValueFactory<>("RequestType"));
 
         table.getColumns().addAll(idCol, titleCol, RequestCol, prioCol, statusCol, dateCol, resCol);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS); //changed column order

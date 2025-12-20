@@ -3,5 +3,6 @@ out
 __MACOSX
 .idea
 /out/production/ItTicketing
+.DS_Store
 
 

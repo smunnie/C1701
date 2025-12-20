@@ -4,7 +4,7 @@ import app.ITTicketingSimpleApp;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.PieChart;
 import model.*;
-import ui.TicketDialogs;
+import ui.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx. collections.transformation.FilteredList;
@@ -12,7 +12,6 @@ import javafx. collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.layout.GridPane; //not used
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
@@ -29,12 +28,19 @@ import java.time.format.DateTimeFormatter;
 public class AdminView {
 
     private final ITTicketingSimpleApp app;
-    private final TicketDialogs ticketDialogs;
+//    private final TicketDialogs ticketDialogs;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private final DeleteTicketDialog deleteDialogs;
+    private final ResolveTicketDialog resolveDialog;
+    private final ChangepriorityTicketDialog changepriorityDialog;
+    private final ResolutionNoteDialog resolutionNoteDialog;
 
     public AdminView(ITTicketingSimpleApp app) {
         this.app = app;
-        this.ticketDialogs = new TicketDialogs(app);
+        this.deleteDialogs = new DeleteTicketDialog(app);
+        this.resolveDialog = new ResolveTicketDialog();
+        this.changepriorityDialog = new ChangepriorityTicketDialog();
+        this.resolutionNoteDialog = new ResolutionNoteDialog();
     }
 
     public Scene createScene() {
@@ -61,7 +67,7 @@ public class AdminView {
 
         // Get Tickets and Setup filtering
         ObservableList<Ticket> masterList = app.getTicketManager().getAllTickets();
-        FilteredList<Ticket> filteredTickets = new FilteredList<>(masterList, _ -> true); // replaced t parameter to _ coz it was showing t never used warning.
+        FilteredList<Ticket> filteredTickets = new FilteredList<>(masterList, t -> true); // replaced t parameter to _ coz it was showing t never used warning.
         SortedList<Ticket> sorted = new SortedList<>(filteredTickets);
         sorted.comparatorProperty().bind(table.comparatorProperty());
         table.setItems(sorted);
@@ -83,17 +89,17 @@ public class AdminView {
         deleteBtn.setOnAction(e -> {
             Ticket t = table.getSelectionModel().getSelectedItem();
             if (t == null) return;
-            ticketDialogs.deleteWarningDialog(t,table);
+            deleteDialogs.show(t,table);
         });
         resolveBtn.setOnAction(e -> {
             Ticket t = table.getSelectionModel().getSelectedItem();
             if (t == null) return;
-            ticketDialogs.resolveDialog(t, table);
+            resolveDialog.show(t, table);
         });
         changePriorityBtn.setOnAction(e -> {
             Ticket t = table.getSelectionModel().getSelectedItem();
             if (t == null) return;
-            ticketDialogs.priorityDialog(t,table);
+            changepriorityDialog.show(t,table);
         });
 
         //Filter controls
@@ -230,7 +236,11 @@ public class AdminView {
 
         // Request Type Column
         TableColumn<Ticket, String> requestCol = new TableColumn<>("Request Type");
-        requestCol.setCellValueFactory(new PropertyValueFactory<>("requestType"));
+        requestCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(
+                        app.formatEnumName(cellData.getValue().getRequestType().name())
+                )
+        );
         requestCol.setPrefWidth(150);
 
         // Priority Column
@@ -279,12 +289,12 @@ public class AdminView {
 
         //Popup window implementation
         resCol.setCellFactory(column -> new TableCell<>() {
-            private final Button viewButton = new Button("view");
+            private final Button viewButton = new Button("view note");
             {
                 viewButton.setOnAction(event ->{
                     Ticket t = getTableView().getItems().get(getIndex());
                     if (t != null){
-                        showResolutionPopup(t); // call method to show pop-up window
+                        resolutionNoteDialog.show(t); // call method to show pop-up window
                     }
                 });
             }
@@ -298,39 +308,19 @@ public class AdminView {
                 } else {
                     Ticket t = getTableView().getItems().get(getIndex());
                    //simple check show button if resolution exists
+                  // this check does not work
                     if (t.getResolution_note() != null && !t.getResolution_note().isEmpty()){
                         setGraphic(viewButton);
                         setText(null);
                     } else {
                         setGraphic(null); //node
-                        setText("No resolution");
+                        setText("No resolution note");
                     }
                 }
             }
         });
         return resCol;
     }
-
-    //Shows resolution note in pop up dialog window
-    private void showResolutionPopup(Ticket ticket) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Resolution Details"); //create dialog window
-        dialog.setHeaderText("Ticket #" + ticket.getId() + ": " + ticket.getTitle()); // set header
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK); //add button to dialogue
-        Label resolutionLabel = new Label("Resolution Note:"); // create content for popup
-        TextArea resolutionArea = new TextArea(ticket.getResolution_note());
-        resolutionArea.setEditable(false); //read-only
-        resolutionArea.setWrapText(true); //word wrapping
-
-        //create layout
-        VBox content = new VBox(10, resolutionLabel, resolutionArea);
-        content.setPadding(new Insets(15));
-
-        //Set content and Show dialog
-        dialog.getDialogPane().setContent(content);
-        dialog.showAndWait(); //optional void, Blocks until colsed
-    }
-
 
     //Apply all filters when "Apply" button is pressed
     //Combines status, date range and request type filters

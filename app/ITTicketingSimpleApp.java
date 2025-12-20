@@ -98,5 +98,10 @@ public class ITTicketingSimpleApp extends Application {
     }
     public User getLoggedIn() { return loggedIn; }
 
-
+    public String formatEnumName(String raw) {
+        // replace underscores with spaces
+        String cleaned = raw.replace("_", " ");
+        // capitalize first letter only
+        return cleaned.substring(0, 1).toUpperCase() + cleaned.substring(1).toLowerCase();
+    }
 }
