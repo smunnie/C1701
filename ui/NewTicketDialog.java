@@ -1,11 +1,21 @@
 package ui;
 
+import app.AttachmentStorage;
 import app.ITTicketingSimpleApp;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 import model.Ticket;
 import model.User;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NewTicketDialog {
     private final ITTicketingSimpleApp app;
@@ -42,6 +52,32 @@ public class NewTicketDialog {
         requestBox.setPromptText("Select request");
         grid.add(requestLabel, 0, 2);
         grid.add(requestBox, 1, 2);
+
+        // add attachments
+        Button attachBtn = new Button("Add Attachment");
+        ListView<String> attachmentList = new ListView<>();
+        // Store selected files temporarily (before ticket is created)
+        List<File> selectedFiles = new ArrayList<>();
+        attachBtn.setOnAction(e -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Select attachment(s)");
+            chooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter(
+                            "Images & Docs", "*.png", "*.jpg", "*.jpeg", "*.pdf", "*.txt"
+                    )
+            );
+
+            List<File> files = chooser.showOpenMultipleDialog(null);
+            if (files != null) {
+                for (File f: files) {
+                    selectedFiles.add(f);
+                    attachmentList.getItems().add(f.getName());
+                }
+            }
+        });
+
+        grid.add(attachBtn, 0, 3);
+        grid.add(attachmentList, 1, 3);
 
         grid.setPadding(new Insets(10));
         grid.setHgap(10);
@@ -89,6 +125,28 @@ public class NewTicketDialog {
 //                create ticket
 //                System.out.println("Creating new Ticket");
                 Ticket ticket = new Ticket(title, desc,loggedinUser, requestType);
+
+                // Copy attachments into temp attachments folder
+                for (File f: selectedFiles) {
+                    try {
+                        Path target = AttachmentStorage.ATTACHMENTS_DIR.resolve(
+                                "ticket_" + ticket.getId() + "_" + f.getName()
+                        );
+
+                        Files.copy(
+                                f.toPath(),
+                                target,
+                                StandardCopyOption.REPLACE_EXISTING
+                        );
+
+                        ticket.addAttachment(target);
+
+                    } catch (IOException ex) {
+                        new Alert(Alert.AlertType.ERROR,
+                                "Failed to attach file: " + f.getName())
+                                .showAndWait();
+                    }
+                }
 
 //                app.getAllTickets().addAll(ticket);
                 app.getTicketManager().addTicket(ticket);

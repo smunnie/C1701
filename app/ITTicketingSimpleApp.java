@@ -23,6 +23,7 @@ public class ITTicketingSimpleApp extends Application {
     private User loggedIn;
 
     public static void main(String[] args) {
+        AttachmentStorage.init(); //clear the temp folder of temporary attachments.
         launch(args);
     }
 

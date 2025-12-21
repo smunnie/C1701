@@ -274,9 +274,43 @@ public class AdminView {
         //Resolution Column with pop-up button
         TableColumn<Ticket, String> resCol = getResCol();
 
+        // attachment column
+        TableColumn<Ticket, Void> attachCol = new TableColumn<>("Attachment");
+        attachCol.setCellFactory(col -> new TableCell<>() {
+            // view button that opens up the list of attachments available
+            private final Button btn = new Button("View");
+
+            {
+                btn.setOnAction(e -> {
+                    Ticket ticket = getTableView().getItems().get(getIndex());
+                    AttachmentListDialog.show(ticket);
+                });
+            }
+            // function to say no attachments, instead of a view button when there's no attahment for the ticket
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    Ticket ticket = getTableView().getItems().get(getIndex());
+                    if (ticket.getAttachments().isEmpty()) {
+                        // Show text instead of button
+                        setGraphic(null);
+                        setText("No attachments");
+                    } else {
+                        // Show the View button
+                        setText(null);
+                        setGraphic(btn);
+                }
+            } }
+        });
+
         //Column order
         table.getColumns().addAll(idCol, titleCol, requestCol, prioCol, statusCol,
-                creatorCol, dateCol, resCol);                                        //introduce local variable
+                creatorCol, dateCol, resCol, attachCol);
 
         /* Column resize policy */
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);

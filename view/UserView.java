@@ -12,6 +12,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import ui.AttachmentListDialog;
 import ui.DecreaseTicketPriorityDialog;
 import ui.DeleteTicketDialog;
 import ui.NewTicketDialog;
@@ -129,9 +130,43 @@ public class UserView {
                 )
         );
 
+        // attachment column
+        TableColumn<Ticket, Void> attachCol = new TableColumn<>("Attachment");
+        attachCol.setCellFactory(col -> new TableCell<>() {
+            // view button that opens up the list of attachments available
+            private final Button btn = new Button("View");
+
+            {
+                btn.setOnAction(e -> {
+                    Ticket ticket = getTableView().getItems().get(getIndex());
+                    AttachmentListDialog.show(ticket);
+                });
+            }
+            // function to say no attachments, instead of a view button when there's no attahment for the ticket
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    Ticket ticket = getTableView().getItems().get(getIndex());
+                    if (ticket.getAttachments().isEmpty()) {
+                        // Show text instead of button
+                        setGraphic(null);
+                        setText("No attachments");
+                    } else {
+                        // Show the View button
+                        setText(null);
+                        setGraphic(btn);
+                    }
+                } }
+        });
+
 //        RequestCol.setCellValueFactory(new PropertyValueFactory<>("RequestType"));
 
-        table.getColumns().addAll(idCol, titleCol, RequestCol, prioCol, statusCol, dateCol, resCol);
+        table.getColumns().addAll(idCol, titleCol, RequestCol, prioCol, statusCol, dateCol, resCol, attachCol);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS); //changed column order
     }
 

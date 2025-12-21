@@ -1,6 +1,9 @@
 package model;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Ticket {
     public enum Status{
@@ -17,16 +20,13 @@ public class Ticket {
       private final int defaultPriority;
 
       JobRequest(int defaultPriority){
-
         this.defaultPriority = defaultPriority;
       }
 
       public int getDefaultPriority() {
-
         return defaultPriority;
       }
     }
-
 
     public int id;
     public String title;
@@ -39,6 +39,7 @@ public class Ticket {
  //changed activityType to requestType
     public JobRequest requestType;
     public int priority;
+    private List<Path> attachments = new ArrayList<>();
 
 //    constructor
     public Ticket( String title, String description, User createdBy, JobRequest requestType) {
@@ -54,15 +55,12 @@ public class Ticket {
         this.resolution_note = " ";
     }
 
-//  getters
+//  getter methods
     public int getId() {
         return id;
     }
     public String getTitle() {
         return title;
-    }
-    public String getDescription() {
-        return description;
     }
     public User getCreatedBy() {
         return createdBy;
@@ -76,30 +74,19 @@ public class Ticket {
     public LocalDateTime getCreatedDate() {
         return createdDate;
     }
-    public JobRequest getRequestType() {
-        return requestType;
-    }
-
+    public JobRequest getRequestType() { return requestType;}
     public int getPriority(){
         return priority;
     }
+    public List<Path> getAttachments() { return attachments; }
+    // Called when user uploads a file
+    public void addAttachment(Path attachment) { attachments.add(attachment);}
 
-//  setter
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-    public void setResolution_note(String note){
-        this.resolution_note = note;}
-
-    public void setRequestType(JobRequest newRequestType) {
-        this.requestType = newRequestType;
-    }
+//  setter methods
+    public void setStatus(Status status) { this.status = status; }
+    public void setResolution_note(String note){ this.resolution_note = note;}
     public void setCreatedDate(LocalDateTime createdDateTime){
         this.createdDate = createdDateTime;
     }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-        }
-
+    public void setPriority(int priority) { this.priority = priority; }
 }

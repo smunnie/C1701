@@ -3,6 +3,11 @@ package model;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 
 public class TicketManager {
@@ -10,8 +15,8 @@ public class TicketManager {
 //    private final List<Ticket> allTickets = new ArrayList<>();
 
     public TicketManager(){
-//        User admin = new User("admin", "admin", User.Role.admin);
-//        User sam = new User("sam", "sam12", User.Role.user);
+
+        // adding sample ticket 1
         User newUser = new User("user", "user", User.Role.user);
         Ticket t = new Ticket(
                 "Install Visual code",
@@ -22,8 +27,12 @@ public class TicketManager {
         t.setStatus(Ticket.Status.resolved);
         t.setCreatedDate(LocalDateTime.parse("2025-11-07T10:45"));
         t.setResolution_note("new credentials created and login is successful");
+        Path source = Paths.get("attachments/network.png").toAbsolutePath();
 
+        t.addAttachment(source);
         allTickets.add(t);
+
+        // adding sample ticket 2
         allTickets.add(new Ticket(
                 "malware",
                 "virus affecting the computer's operation",
