@@ -27,9 +27,11 @@ public class TicketManager {
         t.setStatus(Ticket.Status.resolved);
         t.setCreatedDate(LocalDateTime.parse("2025-11-07T10:45"));
         t.setResolution_note("new credentials created and login is successful");
-        Path source = Paths.get("attachments/network.png").toAbsolutePath();
+        Path img1 = Paths.get("attachments/network.png").toAbsolutePath();
 
-        t.addAttachment(source);
+        t.addAttachment(img1);
+        Path img2 = Paths.get("attachments/network.png").toAbsolutePath();
+        t.addAttachment(img2);
         allTickets.add(t);
 
         // adding sample ticket 2
