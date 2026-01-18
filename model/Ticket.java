@@ -78,6 +78,7 @@ public class Ticket {
     public int getPriority(){
         return priority;
     }
+    public String getdescription(){return description;}
     public List<Path> getAttachments() { return attachments; }
     // Called when user uploads a file
     public void addAttachment(Path attachment) { attachments.add(attachment);}

@@ -2,6 +2,7 @@ package view;
 
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.geometry.Pos;
 import model.*;
 import app.ITTicketingSimpleApp;
 import javafx.beans.property.SimpleStringProperty;
@@ -12,29 +13,20 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import ui.AttachmentListDialog;
-import ui.DecreaseTicketPriorityDialog;
-import ui.DeleteTicketDialog;
-import ui.NewTicketDialog;
+import ui.*;
 import javafx.scene.layout.Priority;
+import controller.Controllers;
 
 import java.time.format.DateTimeFormatter;
-
 
 public class UserView {
 
     private final ITTicketingSimpleApp app;
-//    private final TicketDialogs ticketDialogs;
+
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private final NewTicketDialog newTicketDialog;
-    private final DeleteTicketDialog deleteDialogs;
-    private final DecreaseTicketPriorityDialog decreasePriDialog;
 
     public UserView(ITTicketingSimpleApp app) {
         this.app = app;
-        this.newTicketDialog = new NewTicketDialog(app);
-        this.decreasePriDialog = new DecreaseTicketPriorityDialog();
-        this.deleteDialogs = new DeleteTicketDialog(app);
     }
 
     public Scene createScene() {
@@ -47,6 +39,18 @@ public class UserView {
         BorderPane.setMargin(header, new Insets(0, 0, 10, 0));
 
         TableView<Ticket> table = new TableView<>();
+        Controllers controller = new Controllers(app,table);
+        table.setRowFactory(tv -> {
+                    TableRow<Ticket> row = new TableRow<>();
+
+                    row.setOnMouseClicked(event -> {
+                        if (event.getClickCount() == 2 && !row.isEmpty()) {
+                            controller.onRowDoubleClick(row.getItem());
+                        }
+                    });
+                    return row;
+                });
+
         setupUserTable(table);
         var allTickets = app.getAllTickets();
         User current = app.getLoggedIn();
@@ -71,41 +75,53 @@ public class UserView {
 
         logoutBtn.setOnAction(e -> app.logout());
 
-        newTicketBtn.setOnAction(e -> {
-            newTicketDialog.show();
-        });
+        newTicketBtn.setOnAction(controller::onClickNewTicket);
 
-        decreasePriBtn.setOnAction(e -> {
-            Ticket t = table.getSelectionModel().getSelectedItem();
-            decreasePriDialog.show(t, table);
-        });
+        decreasePriBtn.setOnAction(controller::onDecreasePriority);
 
-        deleteBtn.setOnAction(e -> {
-            Ticket t = table.getSelectionModel().getSelectedItem();
-            if (t == null) return;
-            deleteDialogs.show(t,table);
-        });
+        deleteBtn.setOnAction(controller::onDelete);
+
+        // display greetings with loggedin Username
+        Label greeting = new Label("👤 Hi, " + app.getLoggedIn().getUsername());
+        greeting.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+
+        // Spacers
+        Region leftSpacer = new Region();
+        Region rightSpacer = new Region();
+
+        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
+        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
 
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
         ToolBar toolBar = new ToolBar(
                 newTicketBtn,
                 decreasePriBtn,
                 deleteBtn,
-                spacer,
-                logoutBtn
+                leftSpacer,
+                rightSpacer,
+                greeting
         );
 
         root.setTop(toolBar);
         root.setCenter(table);
+
+        //Bottom Bar
+        HBox bottomBar = new HBox(logoutBtn);
+        bottomBar.setAlignment(Pos.CENTER_LEFT);
+        bottomBar.setPadding(new Insets(5)); //can be changed to 10,0,0,0 for space;
+        root.setBottom(bottomBar);
 
         return new Scene(root, 800, 450);
     }
 
     private void setupUserTable(TableView<Ticket> table) {
         TableColumn<Ticket, Integer> idCol = new TableColumn<>("ID");
-        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+        // serialize row numbers
+        idCol.setCellValueFactory(cell ->
+                new javafx.beans.property.ReadOnlyObjectWrapper<>(
+                        table.getItems().indexOf(cell.getValue()) + 1
+                )
+        );
 
         TableColumn<Ticket, String> titleCol = new TableColumn<>("Title");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -116,8 +132,7 @@ public class UserView {
         TableColumn<Ticket, Integer> prioCol = new TableColumn<>("Priority");
         prioCol.setCellValueFactory(new PropertyValueFactory<>("priority"));
 
-        TableColumn<Ticket, String> resCol = new TableColumn<>("Resolution");
-        resCol.setCellValueFactory(new PropertyValueFactory<>("resolution_note"));
+        TableColumn<Ticket, String> resCol = getResCol(); // method for resolution note pop up
 
         TableColumn<Ticket, String> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(cell ->
@@ -131,6 +146,13 @@ public class UserView {
         );
 
         // attachment column
+        TableColumn<Ticket, Void> attachCol = getTicketVoidTableColumn();
+
+        table.getColumns().addAll(idCol, titleCol, RequestCol, prioCol, statusCol, dateCol, resCol, attachCol);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS); //changed column order
+    }
+
+    private static TableColumn<Ticket, Void> getTicketVoidTableColumn() {
         TableColumn<Ticket, Void> attachCol = new TableColumn<>("Attachment");
         attachCol.setCellFactory(col -> new TableCell<>() {
             // view button that opens up the list of attachments available
@@ -142,7 +164,7 @@ public class UserView {
                     AttachmentListDialog.show(ticket);
                 });
             }
-            // function to say no attachments, instead of a view button when there's no attahment for the ticket
+            // function to say no attachments, instead of a view button when there's no attachment for the ticket
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -155,7 +177,7 @@ public class UserView {
                     if (ticket.getAttachments().isEmpty()) {
                         // Show text instead of button
                         setGraphic(null);
-                        setText("No attachments");
+                        setText("None");
                     } else {
                         // Show the View button
                         setText(null);
@@ -163,11 +185,47 @@ public class UserView {
                     }
                 } }
         });
-
-//        RequestCol.setCellValueFactory(new PropertyValueFactory<>("RequestType"));
-
-        table.getColumns().addAll(idCol, titleCol, RequestCol, prioCol, statusCol, dateCol, resCol, attachCol);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS); //changed column order
+        return attachCol;
     }
 
+    //Resolution column with pop-up window
+    private TableColumn<Ticket, String> getResCol() {
+        TableColumn<Ticket, String> resCol = new TableColumn<>("Resolution");
+        resCol.setCellValueFactory(new PropertyValueFactory<>("resolution_note"));
+
+        //Create a resolution dialog instance
+        ResolutionNoteDialog resolutionNoteDialog = new ResolutionNoteDialog();
+        //Popup window implementation
+        resCol.setCellFactory(column -> new TableCell<>() {
+            private final Button viewButton = new Button("view note");
+            {
+                viewButton.setOnAction(event ->{
+                    Ticket t = getTableRow().getItem();
+                    if (t != null){
+                        resolutionNoteDialog.show(t); // call method to show pop-up window
+                    }
+                });
+            }
+            @Override
+            protected void updateItem(String item, boolean empty){
+                super.updateItem(item, empty);
+
+                if (empty){
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                //simple check show button if resolution exists
+                // this check does not work
+                if (item == null || item.isBlank()) {
+                    setGraphic(null);
+                    setText("None");
+                } else {
+                    setText(null);
+                    setGraphic(viewButton); //node
+                }
+            }
+        });
+        return resCol;
+    }
 }

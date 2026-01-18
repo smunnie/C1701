@@ -10,15 +10,24 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class ITTicketingSimpleApp extends Application {
 
     private Stage stage;
     private final TicketManager ticketManager = new TicketManager();
-//    private final ObservableList<Ticket> allTickets = FXCollections.observableArrayList();
-    private final User newUser = new User( "user", "user", User.Role.user);
-    private final User admin  = new User( "admin", "admin", User.Role.admin);
+
+    private final List<User> userList = Arrays.asList(
+            new User("user", "user", model.User.Role.user),
+            new User("anita", "ann123", model.User.Role.user),
+            new User("admin", "admin", model.User.Role.admin),
+            new User("sam", "sm678", model.User.Role.user),
+            new User("edwin", "ed456", model.User.Role.user),
+            new User("muni", "mn419", model.User.Role.user)
+    );
+
 
     private User loggedIn;
 
@@ -66,18 +75,28 @@ public class ITTicketingSimpleApp extends Application {
 
 
         loginBtn.setOnAction(e -> {
-            String u1 = userField.getText().trim();
-            String p1 = passField.getText().trim();
+            String username = userField.getText().trim();
+            String password = passField.getText().trim();
 
-            if (u1.equals(newUser.getUsername()) && p1.equals(newUser.getPassword())) {
-                loggedIn = newUser;
-                stage.setScene(new UserView(this).createScene());
-                stage.setMaximized(true);
-            } else if (u1.equals(admin.getUsername()) && p1.equals(admin.getPassword())) {
-                loggedIn = admin;
-                stage.setScene(new AdminView(this).createScene());
-                stage.setMaximized(true);
-            } else {
+            boolean loginSuccess = false;
+
+            for (User user : userList) {
+                if (user.getUsername().equals(username) &&
+                        user.getPassword().equals(password)) {
+                    loggedIn = user;
+                    loginSuccess = true;
+
+                    if (user.getRole() == model.User.Role.admin) {
+                        stage.setScene(new AdminView(this).createScene());
+                    } else {
+                        stage.setScene(new UserView(this).createScene());
+                    }
+                    stage.setMaximized(true);
+                    break;
+                }
+            }
+
+            if (!loginSuccess) {
                 errorMsg.setText("Wrong username or password.");
             }
         });

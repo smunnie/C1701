@@ -1,8 +1,10 @@
 package view;
 
 import app.ITTicketingSimpleApp;
+import controller.Controllers;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.PieChart;
+import javafx.scene.layout.*;
 import model.*;
 import ui.*;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,32 +16,22 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import Charts.adminCharts;
 
-import javax.swing.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime; // in the date column you have date and time
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class AdminView {
 
-    private final ITTicketingSimpleApp app;
-//    private final TicketDialogs ticketDialogs;
+    private final ITTicketingSimpleApp app ;
+
+
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private final DeleteTicketDialog deleteDialogs;
-    private final ResolveTicketDialog resolveDialog;
-    private final ChangepriorityTicketDialog changepriorityDialog;
-    private final ResolutionNoteDialog resolutionNoteDialog;
+    public final ResolutionNoteDialog resolutionNoteDialog;
+
 
     public AdminView(ITTicketingSimpleApp app) {
         this.app = app;
-        this.deleteDialogs = new DeleteTicketDialog(app);
-        this.resolveDialog = new ResolveTicketDialog();
-        this.changepriorityDialog = new ChangepriorityTicketDialog();
         this.resolutionNoteDialog = new ResolutionNoteDialog();
     }
 
@@ -47,16 +39,22 @@ public class AdminView {
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
 
-        // Header
-        Label header = new Label("Admin Dashboard - " + app.getLoggedIn().getUsername());
-        header.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
         // Table Setup
         TableView<Ticket> table = new TableView<>();
-        setupAdminTable(table);
+        Controllers controller = new Controllers(app,table);
+        table.setRowFactory(tv -> {
+            TableRow<Ticket> row = new TableRow<>();
 
-        // Apply custom CSS to reduce congestion
-        table.setStyle("-fx-font-size : 12px");
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    controller.onRowDoubleClick(row.getItem());
+                }
+            });
+
+            return row;
+        });
+
+        setupAdminTable(table);
 
         // Scroll pane
         ScrollPane tableScroll = new ScrollPane(table);
@@ -76,31 +74,20 @@ public class AdminView {
         Button resolveBtn = new Button("Resolve");
         Button deleteBtn = new Button("Delete");
         Button changePriorityBtn = new Button("Change Priority");
-//        Button newTicketBtn = new Button("Raise Ticket");
         Button logoutBtn = new Button("Logout");
 
-//        HBox buttons = new HBox(10, resolveBtn, deleteBtn, changePriorityBtn, logoutBtn);
+
+
+//      HBox buttons = new HBox(10, resolveBtn, deleteBtn, changePriorityBtn, logoutBtn);
         HBox buttons = new HBox(10, resolveBtn, deleteBtn, changePriorityBtn);
         buttons.setAlignment(Pos.CENTER_LEFT);
         buttons.setPadding(new Insets(10, 0, 10, 0));
 
         // Event handlers for buttons
-        logoutBtn.setOnAction(e -> app.logout());
-        deleteBtn.setOnAction(e -> {
-            Ticket t = table.getSelectionModel().getSelectedItem();
-            if (t == null) return;
-            deleteDialogs.show(t,table);
-        });
-        resolveBtn.setOnAction(e -> {
-            Ticket t = table.getSelectionModel().getSelectedItem();
-            if (t == null) return;
-            resolveDialog.show(t, table);
-        });
-        changePriorityBtn.setOnAction(e -> {
-            Ticket t = table.getSelectionModel().getSelectedItem();
-            if (t == null) return;
-            changepriorityDialog.show(t,table);
-        });
+        logoutBtn.setOnAction(controller::onLogout);
+        deleteBtn.setOnAction(controller::onDelete);
+        resolveBtn.setOnAction(controller::onResolve);
+        changePriorityBtn.setOnAction(controller::onChangePriority);
 
         //Filter controls
         Label filterLabel = new Label("Filter:");
@@ -153,22 +140,12 @@ public class AdminView {
         Button applyFilterBtn = new Button("Apply");
 
         //Apply Filter button Action
-        applyFilterBtn.setOnAction(e ->{
-            applyFilters(filteredTickets, fromDatePicker, toDatePicker, requestBox, statusBox.getValue());
-        });
+        applyFilterBtn.setOnAction(e -> TicketFilters.applyFilters(filteredTickets, fromDatePicker, toDatePicker, requestBox, statusBox.getValue()));
 
         //Add a "Clear Filters" button for better UX
         Button clearFilterBtn = new Button("Clear");
         clearFilterBtn.setOnAction(e ->{
-            // clear all filter controls
-            statusBox.setValue("Any");
-            fromDatePicker.setValue(null);
-            toDatePicker.setValue(null);
-            requestBox.setValue("All");
-
-            // Reset all filters
-            filteredTickets.setPredicate(ticket -> true);
-            System.out.println("All filters cleared");
+            TicketFilters.clearFilters(filteredTickets,statusBox,fromDatePicker,toDatePicker,requestBox);
         });
 
         //Filter Bar Layout (changed from 10 to 8)
@@ -180,14 +157,30 @@ public class AdminView {
         // Add clear button to filter Bar
         filterBar.getChildren().add(clearFilterBtn);
 
+        // display greetings with loggedin Username
+        Label greeting = new Label("👤 Hi, " + app.getLoggedIn().getUsername());
+        greeting.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox topRow = new HBox(spacer, greeting);
+        topRow.setPadding(new Insets(5));
+
+
         // Top area -VBox
-        VBox topArea = new VBox(header, filterBar, buttons);
+        VBox topArea = new VBox(topRow,filterBar, buttons);
         topArea.setSpacing(5);
 
         //Charts section
         adminCharts charts = new adminCharts(app);
         BarChart<String, Number> barChart = charts.getMonthlyTicketsBarChart();
         PieChart pieChart = charts.getMonthlyTicketsPieChart();
+        BarChart<String, Number> requestTypeChart = charts.getRequestTypeOverTimeChart();
+
+// setCenter(...) your existing dashboard content
+
+
 
         //Style charts to reduce congestion
         barChart.setLegendVisible(false);
@@ -197,13 +190,13 @@ public class AdminView {
         pieChart.setTitle("Tickets per Month");
         pieChart.setPrefHeight(250);
 
-        VBox chartsBox = new VBox(15, barChart, pieChart);
+        VBox chartsBox = new VBox(15, barChart,requestTypeChart, pieChart);
         chartsBox.setPadding(new Insets(10));
 
         //Split Pane - For table and charts
         SplitPane splitPane = new SplitPane();
         splitPane.getItems().addAll(tableScroll, chartsBox);
-        splitPane.setDividerPositions(0.65); // Give more space to the table
+        splitPane.setDividerPositions(0.90); // Give more space to the table
 //        splitPane.setDividerPositions(0.60);  //repetition
 
         //Bottom Bar
@@ -215,7 +208,8 @@ public class AdminView {
         root.setCenter(splitPane);
         root.setBottom(bottomBar);
 
-        BorderPane.setMargin(header, new Insets(0, 0, 5, 0));
+        splitPane.setDividerPositions(0.90); // Give more space to the table
+
 
         return new Scene(root, 1200, 700); //Increased window from 1000, 550
 
@@ -232,7 +226,7 @@ public class AdminView {
         //Title Column
         TableColumn<Ticket, String> titleCol = new TableColumn<>("Title");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
-        titleCol.setPrefWidth(150);
+        titleCol.setPrefWidth(100); //reduced to 100 from 150
 
         // Request Type Column
         TableColumn<Ticket, String> requestCol = new TableColumn<>("Request Type");
@@ -241,7 +235,7 @@ public class AdminView {
                         app.formatEnumName(cellData.getValue().getRequestType().name())
                 )
         );
-        requestCol.setPrefWidth(150);
+        requestCol.setPrefWidth(180); //request type column is still small increased from 150 to 180
 
         // Priority Column
         TableColumn<Ticket, Integer> prioCol = new TableColumn<>("Priority");
@@ -275,6 +269,17 @@ public class AdminView {
         TableColumn<Ticket, String> resCol = getResCol();
 
         // attachment column
+        TableColumn<Ticket, Void> attachCol = getTicketVoidTableColumn();
+
+        //Column order
+        table.getColumns().addAll(idCol, titleCol, requestCol, prioCol, statusCol,
+                creatorCol, dateCol, resCol, attachCol);
+
+        /* Column resize policy */
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+    }
+
+    private static TableColumn<Ticket, Void> getTicketVoidTableColumn() {
         TableColumn<Ticket, Void> attachCol = new TableColumn<>("Attachment");
         attachCol.setCellFactory(col -> new TableCell<>() {
             // view button that opens up the list of attachments available
@@ -286,7 +291,7 @@ public class AdminView {
                     AttachmentListDialog.show(ticket);
                 });
             }
-            // function to say no attachments, instead of a view button when there's no attahment for the ticket
+            // function to say no attachments, instead of a view button when there's no attachment for the ticket
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -299,7 +304,7 @@ public class AdminView {
                     if (ticket.getAttachments().isEmpty()) {
                         // Show text instead of button
                         setGraphic(null);
-                        setText("No attachments");
+                        setText("None");
                     } else {
                         // Show the View button
                         setText(null);
@@ -307,14 +312,9 @@ public class AdminView {
                 }
             } }
         });
-
-        //Column order
-        table.getColumns().addAll(idCol, titleCol, requestCol, prioCol, statusCol,
-                creatorCol, dateCol, resCol, attachCol);
-
-        /* Column resize policy */
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        return attachCol;
     }
+
 
     //Resolution column with pop-up window
     private TableColumn<Ticket, String> getResCol() {
@@ -326,7 +326,7 @@ public class AdminView {
             private final Button viewButton = new Button("view note");
             {
                 viewButton.setOnAction(event ->{
-                    Ticket t = getTableView().getItems().get(getIndex());
+                    Ticket t = getTableRow().getItem();
                     if (t != null){
                         resolutionNoteDialog.show(t); // call method to show pop-up window
                     }
@@ -339,85 +339,21 @@ public class AdminView {
                 if (empty){
                     setGraphic(null);
                     setText(null);
-                } else {
-                    Ticket t = getTableView().getItems().get(getIndex());
+                    return;
+                }
                    //simple check show button if resolution exists
                   // this check does not work
-                    if (t.getResolution_note() != null && !t.getResolution_note().isEmpty()){
-                        setGraphic(viewButton);
-                        setText(null);
+                if (item == null || item.isBlank()) {
+                        setGraphic(null);
+                        setText("None");
                     } else {
-                        setGraphic(null); //node
-                        setText("No resolution note");
+                        setText(null);
+                        setGraphic(viewButton); //node
                     }
                 }
-            }
         });
         return resCol;
     }
-
-    //Apply all filters when "Apply" button is pressed
-    //Combines status, date range and request type filters
-    private void applyFilters(FilteredList<Ticket> filteredTickets,
-                              DatePicker fromDatePicker,
-                              DatePicker toDatePicker,
-                              ComboBox<String> requestBox,
-                              String selectedStatus) {
-        filteredTickets.setPredicate(ticket -> {
-            boolean passesFilters = true;
-
-            //Status filter (existing functionality)
-            if (!selectedStatus.equals("Any")) {
-                //convert both strings
-                String ticketStatus = ticket.getStatus().name().toLowerCase();
-                String filterStatus = selectedStatus.toLowerCase();
-                passesFilters = ticketStatus.equals(filterStatus);
-            }
-
-            //Date range filter - LocalDateTime comparisons
-            LocalDate fromDate = fromDatePicker.getValue();
-            LocalDate toDate = toDatePicker.getValue();
-            LocalDateTime ticketDateTime = ticket.getCreatedDate();
-
-            if (fromDate != null) {
-                //convert LocalDate to LocalDateTime
-                //method chaining demonstrated here
-                LocalDateTime fromDateTime = fromDate.atStartOfDay();
-                passesFilters = passesFilters && !ticketDateTime.isBefore(fromDateTime);
-            }
-
-            if (toDate != null) {
-                LocalDateTime toDateTime = toDate.atTime(LocalTime.MAX);
-                passesFilters = passesFilters && !ticketDateTime.isAfter(toDateTime);
-            }
-
-            // request type filter
-            String selectedRequestType = requestBox.getValue();
-            //map UI display names to actual enum values as might differ from enum names
-            String enumEquivalent = mapRequestTypeToEnum(selectedRequestType);
-            if (enumEquivalent != null){
-                //Compare ticket's request type with selected type
-                String ticketRequestType = ticket.getRequestType().name();
-                passesFilters = passesFilters && ticketRequestType.equalsIgnoreCase(enumEquivalent);
-            }
-            return passesFilters; // Ticket passes all filters
-        });
-    }
-
-    //Helper method to map UI display names to actual enum values
-    private String mapRequestTypeToEnum (String uiDisplayName){
-        if (uiDisplayName== null || uiDisplayName.equals("All")) {
-            return null;
-        }
-        return switch (uiDisplayName.toLowerCase()) {
-            case "security issues" -> "security_issues"; //Matches enum value
-            case "new computer configuration" -> "new_computer_configuration";
-            case "software/app installation" -> "software_app_installation";
-            case "network issue" -> "network_issue";
-            default -> {
-                System.err.println("unknown request type: " + uiDisplayName);
-                yield null;
-            }
-        };
-    }
 }
+
+

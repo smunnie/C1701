@@ -3,26 +3,9 @@ package app;
 import java.io.IOException;
 import java.nio.file.*;
 
-/**
- * This class is responsible for managing attachment files for the application.
- * - Attachments are stored in ONE folder called "attachments/"
- * - This folder is RESET every time the app starts
- */
 public class AttachmentStorage {
      // Path to the single attachments folder.
     public static final Path ATTACHMENTS_DIR = Paths.get("attachments/temp");
-    /**
-     * This method is called ONCE when the app starts.
-     *
-     * What it does:
-     * 1. If the attachments folder already exists:
-     *    - Delete ALL files inside it
-     * 2. Re-create the attachments folder
-     *
-     * This guarantees:
-     * - A clean state every time the app runs
-     * - Old attachments from previous runs are removed
-     */
     public static void init() {
 
         try {
