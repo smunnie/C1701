@@ -1,0 +1,195 @@
+/* =========================
+   GLOBAL ROOT STYLING
+   ========================= */
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-background-color: #f1f4f8;
+}
+
+/* =========================
+   GENERAL TYPOGRAPHY
+   ========================= */
+.label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #333333;
+}
+
+/* =========================
+   CARDS (TABLE & CHARTS)
+   ========================= */
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);
+}
+
+/* Login input fields */
+.login-field {
+    -fx-background-radius: 8;
+    -fx-padding: 6 10;
+    -fx-border-radius: 8;
+}
+
+/* Highlight focused fields */
+.login-field:focused {
+    -fx-border-color: #1976d2;
+    -fx-border-width: 2;
+}
+
+/* Login button */
+.login-root .button.primary {
+    -fx-background-color: #1976d2;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 8 20;
+}
+
+.login-root .button.primary:hover {
+    -fx-background-color: #125aa0;
+}
+
+/* =========================
+   FILTER BAR
+   ========================= */
+.filter-bar {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 2);
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+.button {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #333333;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 6 14;
+}
+
+.button:hover {
+    -fx-background-color: #d5d5d5;
+}
+
+/* Primary buttons */
+.button.primary {
+    -fx-background-color: #1976d2;
+    -fx-text-fill: white;
+}
+
+.button.primary:hover {
+    -fx-background-color: #125aa0;
+}
+
+/* Danger buttons */
+.button.danger {
+    -fx-background-color: #d32f2f;
+    -fx-text-fill: white;
+}
+
+.button.danger:hover {
+    -fx-background-color: #b71c1c;
+}
+
+/* =========================
+   INPUT CONTROLS
+   ========================= */
+.combo-box,
+.date-picker,
+.text-field {
+    -fx-background-radius: 6;
+}
+
+/* =========================
+   TABLE VIEW
+   ========================= */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 6;
+}
+
+/* Table header */
+.table-view .column-header-background {
+    -fx-background-color: #e3f2fd;
+}
+
+.table-view .column-header {
+    -fx-font-weight: bold;
+}
+
+/* Row selection */
+.table-row-cell:filled:selected {
+    -fx-background-color: #e3f2fd;
+}
+
+/* Status row colors */
+.table-row-cell.open {
+    -fx-background-color: #fffde7;
+}
+
+.table-row-cell.resolved {
+    -fx-background-color: #e8f5e9;
+}
+
+.table-row-cell.cancelled {
+    -fx-background-color: #ffebee;
+}
+
+/* =========================
+   CHARTS
+   ========================= */
+.chart {
+    -fx-padding: 20;
+}
+
+.chart-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.axis-label {
+    -fx-font-size: 12px;
+}
+
+.chart-legend {
+    -fx-padding: 10;
+}
+
+/* =========================
+   GREETING (TOP RIGHT)
+   ========================= */
+.greeting {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #424242;
+}
+
+/* =========================
+   CHANGE PRIORITY DIALOG
+   ========================= */
+.dialog-root {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 12, 0, 0, 4);
+}
+
+.dialog-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+/* ComboBox inside dialog */
+.dialog-root .combo-box {
+    -fx-background-radius: 6;
+}
+
+/* Dialog buttons */
+.dialog-root .button {
+    -fx-padding: 6 16;
+}
